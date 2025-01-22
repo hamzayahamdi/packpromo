@@ -16,7 +16,7 @@ model Product {
   mainCategory  String
   subCategory   String
   initialPrice  Float
-  packPrice     Float
+  topDealsPrice     Float
   mainImage     String
   gallery       String[]
   isActive      Boolean  @default(true)
