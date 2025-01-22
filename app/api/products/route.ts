@@ -79,14 +79,17 @@ export async function GET(request: Request) {
       total: totalCount
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace available',
     });
     
     return NextResponse.json(
-      { error: 'Failed to fetch products', details: error.message },
+      { 
+        error: 'Failed to fetch products', 
+        details: error?.message || 'Unknown error'
+      },
       { status: 500 }
     );
   }
