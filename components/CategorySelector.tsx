@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { CATEGORY_DISPLAY_NAMES } from '@/lib/categories'
+import { CATEGORY_DISPLAY_NAMES, MainCategory } from '@/lib/categories'
 
 interface Category {
-  name: string
+  name: MainCategory
   subcategories: string[]
 }
 
@@ -16,52 +16,70 @@ const categories: Category[] = [
 ]
 
 interface CategorySelectorProps {
-  onSelectCategory: (category: string) => void
+  categories: Category[]
+  onCategorySelect: (category: Category) => void
+  selectedCategory?: Category
 }
 
-export default function CategorySelector({ onSelectCategory }: CategorySelectorProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('TOUS');
-  const selectorRef = useRef<HTMLDivElement>(null);
+export default function CategorySelector({ 
+  categories, 
+  onCategorySelect,
+  selectedCategory 
+}: CategorySelectorProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (selectorRef.current) {
-        const { top } = selectorRef.current.getBoundingClientRect();
-        if (top <= 0) {
-          selectorRef.current.classList.add('sticky-selector');
-        } else {
-          selectorRef.current.classList.remove('sticky-selector');
-        }
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
       }
-    };
+    }
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
-  const handleCategoryClick = (category: string) => {
-    setActiveCategory(category);
-    const categorySlug = category === 'TOUS' 
-      ? 'tous'
-      : category.toLowerCase().replace(/\s+/g, '-');
-    onSelectCategory(categorySlug);
-  };
+  const handleCategoryClick = (category: Category) => {
+    onCategorySelect(category)
+    setIsOpen(false)
+  }
 
   return (
-    <div ref={selectorRef} className="bg-gradient-to-r from-blue-900 via-purple-900 to-pink-900 py-4 shadow-lg transition-all duration-300 ease-in-out">
-      <div className="container mx-auto px-4">
-        <div className="flex overflow-x-auto hide-scrollbar">
-          <div className="flex space-x-2 md:justify-center">
+    <div ref={containerRef} className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 border rounded-lg bg-white shadow-sm hover:bg-gray-50"
+      >
+        <span className="text-sm text-gray-700">
+          {selectedCategory 
+            ? CATEGORY_DISPLAY_NAMES[selectedCategory.name]
+            : 'Select Category'
+          }
+        </span>
+        <svg
+          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+          <div className="p-2 space-y-1">
             {categories.map((category) => (
               <motion.button
                 key={category.name}
-                onClick={() => handleCategoryClick(category.name)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ease-in-out ${
-                  activeCategory === category.name
-                    ? 'bg-white text-purple-900 shadow-glow'
-                    : 'bg-transparent text-white border border-white/30 hover:bg-white/10'
-                } whitespace-nowrap`}
-                whileHover={{ scale: 1.05 }}
+                onClick={() => handleCategoryClick(category)}
+                className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors
+                  ${selectedCategory?.name === category.name 
+                    ? 'bg-orange-100 text-orange-800' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {CATEGORY_DISPLAY_NAMES[category.name]}
@@ -69,7 +87,7 @@ export default function CategorySelector({ onSelectCategory }: CategorySelectorP
             ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
