@@ -2,41 +2,17 @@ export const PREDEFINED_CATEGORIES = {
   "TOUS": [
     "Tous les produits"
   ],
-  "SALONS": [
-    "Salon en L",
-    "Salon en U"
+  "SALLE À MANGER": [
+    "Salle à Manger"
   ],
-  "CANAPÉS": [
-    "Canapé 2 Places",
-    "Canapé 3 Places",
-    "Fauteuils"
+  "SÉJOUR": [
+    "Séjour"
   ],
-  "CHAMBRE": [
-    "Lits",
-    "Matelas",
-    "Table de Chevet"
+  "CHAMBRE À COUCHER": [
+    "Chambre à coucher"
   ],
-  "TABLES": [
-    "Table Basse",
-    "Table de Salle à Manger",
-    "Table D'appoint"
-  ],
-  "CHAISES": [
-    "Chaises"
-  ],
-  "JARDIN": [
-    "Ensemble D'extérieur",
-    "Salle à Manger + Chaises"
-  ],
-  "MEUBLES": [
-    "Consoles",
-    "Armoires",
-    "Bibliothèques",
-    "Buffets",
-    "Meubles TV"
-  ],
-  "DECO": [
-    "Mirroirs"
+  "ENSEMBLES DE JARDIN": [
+    "Ensembles de Jardin"
   ]
 } as const;
 

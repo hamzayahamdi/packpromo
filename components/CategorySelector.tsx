@@ -8,13 +8,10 @@ interface Category {
 
 const categories: Category[] = [
   { name: 'Tous', subcategories: [] },
-  { name: 'Salons', subcategories: ['Salon en L', 'Salon en U'] },
-  { name: 'Canapés', subcategories: ['Canapés'] },
-  { name: 'Chambre', subcategories: ['Lits', 'Matelas', 'Commodes', 'Tables de chevet'] },
-  { name: 'Tables', subcategories: ['Tables basses', 'Tables de salle à manger', "Tables d'appoint"] },
-  { name: 'Chaises', subcategories: ['Chaises'] },
-  { name: 'Jardin', subcategories: ['Jardin'] },
-  { name: 'Meubles', subcategories: ['Consoles', 'Armoires', 'Bibliothèques', 'Buffets', 'Meubles TV'] },
+  { name: 'Salle à Manger', subcategories: ['Salle à Manger'] },
+  { name: 'Séjour', subcategories: ['Séjour'] },
+  { name: 'Chambre à coucher', subcategories: ['Chambre à coucher'] },
+  { name: 'Ensembles de Jardin', subcategories: ['Ensembles de Jardin'] },
 ]
 
 interface CategorySelectorProps {

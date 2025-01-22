@@ -8,22 +8,19 @@ import { Menu, Search, ChevronDown, Sofa, Bed, Table2 as Table, Armchair as Chai
 import { useRouter, usePathname } from 'next/navigation'
 import SearchModal from './SearchModal'
 
-// Define category type
-type Category = 'Tous' | 'Salons' | 'Canapés' | 'Chambre' | 'Tables' | 'Chaises' | 'Jardin' | 'Meubles'
+// Update category type
+type Category = 'Tous' | 'Salle à Manger' | 'Séjour' | 'Chambre à coucher' | 'Ensembles de Jardin'
 
 const categories: Category[] = [
-  'Tous', 'Salons', 'Canapés', 'Chambre', 'Tables', 'Chaises', 'Jardin', 'Meubles'
+  'Tous', 'Salle à Manger', 'Séjour', 'Chambre à coucher', 'Ensembles de Jardin'
 ]
 
 const categoryIcons: { [key in Category]: JSX.Element } = {
   'Tous': <LayoutGrid size={18} />,
-  'Salons': <Sofa size={18} />,
-  'Canapés': <Sofa size={18} />,
-  'Chambre': <Bed size={18} />,
-  'Tables': <Table size={18} />,
-  'Chaises': <Chair size={18} />,
-  'Jardin': <Palmtree size={18} />,
-  'Meubles': <Home size={18} />
+  'Salle à Manger': <Table size={18} />,
+  'Séjour': <Sofa size={18} />,
+  'Chambre à coucher': <Bed size={18} />,
+  'Ensembles de Jardin': <Palmtree size={18} />
 }
 
 export default function Header() {
