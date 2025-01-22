@@ -6,13 +6,16 @@ import { Product } from '@prisma/client'
 
 async function getProducts(category: string) {
   try {
-    // Decode and normalize the category
-    const decodedCategory = decodeURIComponent(category).toLowerCase()
+    const decodedCategory = decodeURIComponent(category)
+      .toUpperCase()
+      .replace(/-/g, ' ')
+
     console.log('Processing category:', decodedCategory)
 
-    // For 'tous' category, use EXACTLY the same logic as homepage
-    if (decodedCategory === 'tous') {
+    // For 'TOUS' category or empty category (homepage)
+    if (decodedCategory === 'TOUS' || decodedCategory === '' || !decodedCategory) {
       const products = await prisma.product.findMany({
+        where: { isActive: true },
         orderBy: {
           createdAt: 'desc'
         }
@@ -20,21 +23,37 @@ async function getProducts(category: string) {
       return products
     }
 
-    // For other categories - use raw SQL for better accent handling
-    const products = await prisma.$queryRaw<Product[]>`
-      SELECT * FROM "Product"
-      WHERE LOWER(unaccent("mainCategory")) LIKE LOWER(unaccent(${`%${decodedCategory}%`}))
-      OR LOWER(unaccent("subCategory")) LIKE LOWER(unaccent(${`%${decodedCategory}%`}))
-      ORDER BY "createdAt" DESC
-    `
-
-    if (!products.length && decodedCategory !== 'tous') {
-      // Log the query parameters for debugging
-      console.log('No products found for category:', decodedCategory)
-      return notFound()
+    // Map URL slugs to actual category names
+    const categoryMap: { [key: string]: string } = {
+      'SALLE A MANGER': 'SALLE A MANGER',
+      'SEJOUR': 'SEJOUR',
+      'CHAMBRE A COUCHER': 'CHAMBRE A COUCHER',
+      'ENSEMBLES DE JARDIN': 'ENSEMBLES DE JARDIN'
     }
 
-    console.log(`Found ${products.length} products for category:`, decodedCategory)
+    const actualCategory = categoryMap[decodedCategory]
+    console.log('Mapped to actual category:', actualCategory)
+
+    if (!actualCategory) {
+      console.log('Invalid category:', decodedCategory)
+      return []
+    }
+
+    // For specific categories
+    const products = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { mainCategory: actualCategory },
+          { subCategory: actualCategory }
+        ]
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    }) || []
+
+    console.log(`Found ${products.length} products for category:`, actualCategory)
     return products
   } catch (error: any) {
     console.error('Error fetching products:', error)
@@ -49,6 +68,19 @@ export default async function CategoryPage({
   params: { category: string }
 }) {
   const products = await getProducts(params.category)
+
+  // If no products found, you might want to show a message instead of notFound()
+  if (!products.length) {
+    return (
+      <PageLayout>
+        <div className="text-center py-10">
+          <h2 className="text-2xl font-semibold text-gray-700">
+            Aucun produit trouvé dans cette catégorie
+          </h2>
+        </div>
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout>

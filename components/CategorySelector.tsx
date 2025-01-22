@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { CATEGORY_DISPLAY_NAMES } from '@/lib/categories'
 
 interface Category {
   name: string
@@ -7,11 +8,11 @@ interface Category {
 }
 
 const categories: Category[] = [
-  { name: 'Tous', subcategories: [] },
-  { name: 'Salle à Manger', subcategories: ['Salle à Manger'] },
-  { name: 'Séjour', subcategories: ['Séjour'] },
-  { name: 'Chambre à coucher', subcategories: ['Chambre à coucher'] },
-  { name: 'Ensembles de Jardin', subcategories: ['Ensembles de Jardin'] },
+  { name: 'TOUS', subcategories: [] },
+  { name: 'SALLE A MANGER', subcategories: ['SALLE A MANGER'] },
+  { name: 'SEJOUR', subcategories: ['SEJOUR'] },
+  { name: 'CHAMBRE A COUCHER', subcategories: ['CHAMBRE A COUCHER'] },
+  { name: 'ENSEMBLES DE JARDIN', subcategories: ['ENSEMBLES DE JARDIN'] },
 ]
 
 interface CategorySelectorProps {
@@ -19,7 +20,7 @@ interface CategorySelectorProps {
 }
 
 export default function CategorySelector({ onSelectCategory }: CategorySelectorProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('Tous');
+  const [activeCategory, setActiveCategory] = useState<string>('TOUS');
   const selectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +41,10 @@ export default function CategorySelector({ onSelectCategory }: CategorySelectorP
 
   const handleCategoryClick = (category: string) => {
     setActiveCategory(category);
-    onSelectCategory(category === 'Tous' ? '' : category);
+    const categorySlug = category === 'TOUS' 
+      ? 'tous'
+      : category.toLowerCase().replace(/\s+/g, '-');
+    onSelectCategory(categorySlug);
   };
 
   return (
@@ -60,7 +64,7 @@ export default function CategorySelector({ onSelectCategory }: CategorySelectorP
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {category.name}
+                {CATEGORY_DISPLAY_NAMES[category.name]}
               </motion.button>
             ))}
           </div>

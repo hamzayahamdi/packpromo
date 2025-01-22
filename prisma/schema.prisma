@@ -12,6 +12,7 @@ model Product {
   ref           String   @unique
   slug          String   @unique
   name          String
+  description   String?
   dimensions    String
   mainCategory  String
   subCategory   String

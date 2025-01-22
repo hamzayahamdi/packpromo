@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { PREDEFINED_CATEGORIES, normalizeCategory } from '@/lib/categories';
+
+const ITEMS_PER_PAGE = 12;
 
 export async function POST(request: Request) {
   try {
@@ -24,25 +27,68 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const activeOnly = searchParams.get('active') === 'true'
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const category = searchParams.get('category');
+    const activeOnly = searchParams.get('active') === 'true';
+
+    const skip = (page - 1) * ITEMS_PER_PAGE;
+    
+    console.log('Requested category:', category);
+
+    const where: any = {
+      isActive: true,
+    };
+
+    if (category && category !== 'TOUS') {
+      // Keep the exact category name with accents
+      where.mainCategory = {
+        equals: category,
+        mode: 'insensitive'  // This will make the search case-insensitive but keep accents
+      };
+    }
+
+    // Debug log the query
+    console.log('Query where clause:', JSON.stringify(where, null, 2));
+
+    // First, let's check what categories exist in the database
+    const existingCategories = await prisma.product.findMany({
+      select: {
+        mainCategory: true
+      },
+      distinct: ['mainCategory']
+    });
+    console.log('Existing categories in DB:', existingCategories);
+
+    const totalCount = await prisma.product.count({ where });
 
     const products = await prisma.product.findMany({
-      where: {
-        ...(activeOnly ? { isActive: true } : {})
-      },
+      where,
       orderBy: {
         createdAt: 'desc',
       },
-    })
+      take: ITEMS_PER_PAGE,
+      skip,
+    });
 
-    return NextResponse.json(products)
+    console.log(`Found ${products.length} products for category: ${category}`);
+
+    return NextResponse.json({
+      products,
+      hasMore: skip + products.length < totalCount,
+      total: totalCount
+    });
+
   } catch (error) {
-    console.error('Failed to fetch products:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { error: 'Failed to fetch products', details: error.message },
       { status: 500 }
-    )
+    );
   }
 }
 

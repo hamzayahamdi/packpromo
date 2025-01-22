@@ -8,19 +8,30 @@ import { Menu, Search, ChevronDown, Sofa, Bed, Table2 as Table, Armchair as Chai
 import { useRouter, usePathname } from 'next/navigation'
 import SearchModal from './SearchModal'
 
-// Update category type
-type Category = 'Tous' | 'Salle à Manger' | 'Séjour' | 'Chambre à coucher' | 'Ensembles de Jardin'
+// Update category type to match database format
+type Category = 'TOUS' | 'SALLE À MANGER' | 'SÉJOUR' | 'CHAMBRE À COUCHER' | 'ENSEMBLES DE JARDIN'
 
+// Update categories array to match database format
 const categories: Category[] = [
-  'Tous', 'Salle à Manger', 'Séjour', 'Chambre à coucher', 'Ensembles de Jardin'
+  'TOUS', 'SALLE À MANGER', 'SÉJOUR', 'CHAMBRE À COUCHER', 'ENSEMBLES DE JARDIN'
 ]
 
+// Update the display names mapping
+const categoryDisplayNames: { [key in Category]: string } = {
+  'TOUS': 'Tous',
+  'SALLE À MANGER': 'Salle à Manger',
+  'SÉJOUR': 'Séjour',
+  'CHAMBRE À COUCHER': 'Chambre à coucher',
+  'ENSEMBLES DE JARDIN': 'Ensembles de Jardin'
+}
+
+// Update category icons to use uppercase keys
 const categoryIcons: { [key in Category]: JSX.Element } = {
-  'Tous': <LayoutGrid size={18} />,
-  'Salle à Manger': <Table size={18} />,
-  'Séjour': <Sofa size={18} />,
-  'Chambre à coucher': <Bed size={18} />,
-  'Ensembles de Jardin': <Palmtree size={18} />
+  'TOUS': <LayoutGrid size={18} />,
+  'SALLE À MANGER': <Table size={18} />,
+  'SÉJOUR': <Sofa size={18} />,
+  'CHAMBRE À COUCHER': <Bed size={18} />,
+  'ENSEMBLES DE JARDIN': <Palmtree size={18} />
 }
 
 export default function Header() {
@@ -28,45 +39,70 @@ export default function Header() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [activeCategory, setActiveCategory] = useState<Category | null>('Tous')
+  const [activeCategory, setActiveCategory] = useState<Category | null>('TOUS')
 
-  // Update getActiveCategory to use the Category type
+  // Updated getActiveCategory function
   const getActiveCategory = useCallback((): Category | null => {
     if (pathname?.startsWith('/products/')) return null;
     
-    if (pathname === '/categories/tous' || pathname === '/') return 'Tous';
+    if (pathname === '/categories/tous' || pathname === '/') return 'TOUS';
+    
     const match = pathname.match(/\/categories\/([^/]+)/);
     if (match) {
       const categorySlug = decodeURIComponent(match[1]);
-      return categories.find(cat => 
-        cat.toLowerCase().replace(/\s+/g, '-') === categorySlug
-      ) as Category || 'Tous';
+      
+      // Create a mapping of slugs to categories
+      const slugToCategory: { [key: string]: Category } = {
+        'tous': 'TOUS',
+        'salle-a-manger': 'SALLE À MANGER',
+        'sejour': 'SÉJOUR',
+        'chambre-a-coucher': 'CHAMBRE À COUCHER',
+        'ensembles-de-jardin': 'ENSEMBLES DE JARDIN'
+      };
+      
+      // Remove accents from the slug for comparison
+      const normalizedSlug = categorySlug
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+      
+      return slugToCategory[normalizedSlug] || 'TOUS';
     }
-    return 'Tous';
+    return 'TOUS';
   }, [pathname]);
 
   useEffect(() => {
     setActiveCategory(getActiveCategory())
   }, [pathname, getActiveCategory])
 
+  // Updated handleCategoryClick function
   const handleCategoryClick = (category: Category) => {
     if (category === activeCategory) return;
 
-    setActiveCategory(category)
-    setIsMobileMenuOpen(false)
+    setActiveCategory(category);
+    setIsMobileMenuOpen(false);
 
-    const categorySlug = category
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zà-ÿ0-9-]/g, '')
+    // Create a mapping of categories to slugs
+    const categoryToSlug: { [key in Category]: string } = {
+      'TOUS': 'tous',
+      'SALLE À MANGER': 'salle-a-manger',
+      'SÉJOUR': 'sejour',
+      'CHAMBRE À COUCHER': 'chambre-a-coucher',
+      'ENSEMBLES DE JARDIN': 'ensembles-de-jardin'
+    };
 
-    router.push(`/categories/${categorySlug}`, { scroll: false })
+    const slug = categoryToSlug[category];
+    router.push(`/categories/${slug}`, { scroll: false });
+  };
+
+  // Update the category display in the UI
+  const getCategoryDisplayName = (category: Category) => {
+    return categoryDisplayNames[category]
   }
 
   // Logo click handler - now goes to "Tous" category
   const handleLogoClick = () => {
-    handleCategoryClick('Tous')
+    handleCategoryClick('TOUS')
   }
 
   // Update the click outside handler
@@ -151,7 +187,7 @@ export default function Header() {
                         }
                       `}
                     >
-                      {category}
+                      {getCategoryDisplayName(category)}
                     </span>
                   </Link>
                 ))}
@@ -295,7 +331,7 @@ export default function Header() {
                             : 'text-gray-300 group-hover:text-white'
                           }
                         `}>
-                          {category}
+                          {getCategoryDisplayName(category)}
                         </span>
                       </div>
 
