@@ -1,0 +1,3 @@
+-- CreateTable
+ALTER TABLE "Product" ADD COLUMN "slug" TEXT;
+ALTER TABLE "Product" ADD CONSTRAINT "Product_slug_key" UNIQUE("slug"); 
