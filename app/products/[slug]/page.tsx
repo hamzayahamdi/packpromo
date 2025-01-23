@@ -23,12 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!product) {
       return {
-        title: 'Product Not Found - Top Deal Maroc',
+        title: 'Produit Non Trouvé | Packs Promos',
       }
     }
 
     return {
-      title: `${product.name} - Top Deal Maroc`,
+      title: `${product.name} | Packs Promos`,
       description: `${product.name} - ${product.subCategory} - ${product.dimensions}`,
       openGraph: {
         images: [product.mainImage],
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch (error) {
     console.error('Error fetching product metadata:', error)
     return {
-      title: 'Top Deal Maroc',
+      title: 'Packs Promos',
     }
   }
 }
