@@ -148,10 +148,10 @@ export default function Header() {
               <Image
                 src="/topdeal.svg"
                 alt="Packs Promos"
-                width={240}
-                height={100}
+                width={250}
+                height={80}
                 priority
-                className="w-auto h-full"
+                className="w-auto h-14 sm:h-16"
               />
             </Link>
 
