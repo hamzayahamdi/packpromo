@@ -43,8 +43,8 @@ export default function Header() {
 
   // Updated getActiveCategory function
   const getActiveCategory = useCallback((): Category | null => {
-    // If it's a product page, don't highlight any category
-    if (pathname?.startsWith('/products/')) {
+    // If pathname is null or it's a product page, don't highlight any category
+    if (!pathname || pathname.startsWith('/products/')) {
       return null;
     }
     
