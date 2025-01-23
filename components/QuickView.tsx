@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -24,7 +24,8 @@ import {
   Headphones, 
   MessageCircle, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight, 
+  Package
 } from 'lucide-react'
 import { track } from '@vercel/analytics'
 import useEmblaCarousel from 'embla-carousel-react'
@@ -64,6 +65,31 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
     containScroll: false
   })
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [detectedProducts, setDetectedProducts] = useState<string[]>([])
+
+  const packItems = useMemo(() => {
+    const parts = product.dimensions.split('+').map(part => part.trim());
+    
+    if (parts.length === 1) {
+      return [{
+        name: parts[0],
+        qty: 1
+      }];
+    }
+
+    return [
+      {
+        name: parts[0],
+        qty: 1
+      },
+      {
+        name: parts[1].split('x')[0],
+        qty: parseInt(parts[1].split('x')[1] || '1')
+      }
+    ];
+  }, [product.dimensions]);
+
+  const isPackProduct = packItems.length > 1;
 
   useEffect(() => {
     // Mark component as hydrated
@@ -196,6 +222,21 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
     mainEmbla?.scrollNext();
   };
 
+  const detectProductsInImage = async (imageUrl: string) => {
+    try {
+      const response = await fetch('/api/detect-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl })
+      });
+      
+      const data = await response.json();
+      setDetectedProducts(data.products);
+    } catch (error) {
+      console.error('Error detecting products:', error);
+    }
+  };
+
   const DesktopImageGallery = (
     <div className="embla h-full overflow-hidden" ref={mainViewRef}>
       <div className="embla__container h-full flex">
@@ -218,6 +259,47 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
               draggable={false}
               quality={100}
             />
+            {isPackProduct && (
+              <div className="absolute inset-0 flex flex-col justify-end">
+                <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-sm">
+                        <Package className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-white/90">Contenu du Pack</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {packItems.map((item, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 whitespace-nowrap"
+                        >
+                          <span className="text-sm font-medium text-white/90">
+                            {item.name}
+                          </span>
+                          {item.qty > 1 && (
+                            <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5">
+                              <span className="text-xs font-bold text-white">×{item.qty}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="absolute top-4 left-4 z-20">
+              {detectedProducts.map((product, index) => (
+                <div 
+                  key={index}
+                  className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 text-sm mb-2 animate-fade-in"
+                >
+                  {product}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -273,6 +355,47 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
               draggable={false}
               quality={100}
             />
+            {isPackProduct && (
+              <div className="absolute inset-0 flex flex-col justify-end">
+                <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-sm">
+                        <Package className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-white/90">Contenu du Pack</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {packItems.map((item, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/10 px-3 py-1.5 whitespace-nowrap"
+                        >
+                          <span className="text-sm font-medium text-white/90">
+                            {item.name}
+                          </span>
+                          {item.qty > 1 && (
+                            <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5">
+                              <span className="text-xs font-bold text-white">×{item.qty}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="absolute top-4 left-4 z-20">
+              {detectedProducts.map((product, index) => (
+                <div 
+                  key={index}
+                  className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 text-sm mb-2 animate-fade-in"
+                >
+                  {product}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -297,69 +420,63 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
         </div>
 
         {/* Content Section for Mobile */}
-        <div className="flex-1 bg-white">
+        <div className="flex-1 bg-white pb-24">
           <div className="p-4">
             {/* Product Info */}
             <div className="space-y-4">
-              {/* Product Name and Labels group */}
+              {/* Product Name and Category */}
               <div className="pt-1">
-                <h1 
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 bg-clip-text text-transparent uppercase leading-tight sm:leading-tight lg:leading-tight mb-3"
-                  style={{ 
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {product.name}
-                </h1>
-
-                {/* Category, Dimensions & Reference - Smaller on mobile */}
-                <div className="flex flex-wrap gap-1.5">
-                  <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
-                    <Tag size={12} />
-                    <span className="text-xs font-medium">{product.subCategory}</span>
-                  </div>
-                  <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-700 rounded-full">
-                    <Ruler size={12} />
-                    <span className="text-xs font-medium">{product.dimensions}</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <h1 
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 uppercase leading-tight sm:leading-tight lg:leading-tight"
+                    style={{ 
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {product.name}
+                  </h1>
+                  <div className="flex-shrink-0 px-1 bg-gradient-to-r from-emerald-400 to-green-500 shadow-sm">
+                    <span className="text-[9px] font-medium text-white uppercase tracking-wide leading-[12px] block">
+                      {product.mainCategory}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Price Section - Bigger price */}
-              <div className="bg-gray-50/80 rounded-xl p-4">
-                <div className="flex items-center justify-between gap-2">
-                  {/* Price */}
-                  <div className="flex items-baseline gap-2">
-                    <div className="relative">
-                      <div className="absolute -inset-1.5 sm:-inset-2 -left-0 bg-gradient-to-r from-yellow-400 to-amber-300 -skew-x-12 rounded-lg shadow-lg" />
-                      <span className="relative text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 px-2 sm:px-3 py-0.5 sm:py-1">
-                        {product.topDealsPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
-                      </span>
-                    </div>
-                    <span className="text-sm sm:text-base text-gray-400 line-through ml-2">
-                      {product.initialPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
+              {/* Price Section - Bigger with Enhanced Styling */}
+              <div className="flex items-center justify-between py-3">
+                <div className="flex items-baseline gap-2">
+                  <span className="px-3 py-1.5 inline-block bg-[#FBCF38] -skew-x-12 text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1),4px_4px_12px_-2px_rgba(251,207,56,0.3)]">
+                    <span className="inline-block skew-x-12">
+                      {product.topDealsPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
                     </span>
-                  </div>
+                  </span>
+                  <span className="text-sm sm:text-base text-gray-400 line-through">
+                    {product.initialPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
+                  </span>
+                </div>
 
-                  {/* Discount and Offer badges */}
-                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                    <motion.div
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg text-[10px] sm:text-xs font-bold whitespace-nowrap">
-                        -{discountPercentage}%
-                      </span>
-                    </motion.div>
-                    <motion.div 
-                      className="flex items-center px-1.5 sm:px-2 py-0.5 bg-orange-100 text-orange-700 rounded-lg"
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                    >
-                      <Clock size={10} className="mr-0.5 sm:mr-1" />
-                      <span className="text-[10px] sm:text-xs font-medium whitespace-nowrap">Offre limitée</span>
-                    </motion.div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="bg-red-500 px-2 py-1"
+                  >
+                    <span className="text-sm font-bold text-white">
+                      -{discountPercentage}%
+                    </span>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="flex items-center gap-1.5 bg-emerald-500 px-2 py-1"
+                    animate={{ y: [0, -2, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Clock className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs font-medium text-white whitespace-nowrap">
+                      Offre Limitée
+                    </span>
+                  </motion.div>
                 </div>
               </div>
 
@@ -519,55 +636,43 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
           </div>
         </div>
 
-        {/* WhatsApp button for mobile - removed fixed positioning */}
-        <div className="bg-white border-t">
-          <div className="p-4">
-            <button
-              onClick={handleWhatsAppOrder}
-              className="group relative w-full bg-[#23D366] hover:bg-[#1fb855] text-white rounded-none py-4 px-6 flex items-center justify-center gap-3 transition-all duration-300 overflow-hidden"
-            >
-              {/* Animated background effect */}
-              <div className="absolute inset-0 flex">
-                <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-shimmer" />
-              </div>
+        {/* Floating WhatsApp Button for Mobile */}
+        <div className="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white/95 to-transparent z-50">
+          <button
+            onClick={handleWhatsAppOrder}
+            className="group relative w-full bg-[#23D366] hover:bg-[#1fb855] text-white py-3 px-4 flex items-center justify-center gap-2.5 
+            transition-all duration-300 overflow-hidden 
+            rounded-xl
+            shadow-[0_4px_12px_rgba(35,211,102,0.4),0_2px_4px_rgba(35,211,102,0.3)]
+            hover:shadow-[0_6px_16px_rgba(35,211,102,0.5),0_2px_4px_rgba(35,211,102,0.4)]
+            active:shadow-[0_2px_8px_rgba(35,211,102,0.3)]
+            active:transform active:translate-y-0.5"
+          >
+            {/* Animated background effect */}
+            <div className="absolute inset-0 flex overflow-hidden rounded-xl">
+              <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-shimmer" />
+            </div>
 
-              {/* Pulsing icon */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-75" />
-                <WhatsappIcon 
-                  size={28} 
-                  className="sm:w-8 sm:h-8 relative z-10" 
-                  round={false}
-                  bgStyle={{ fill: "transparent" }}  // Make background transparent
-                  iconFillColor="white"              // Make icon white
-                />
-              </div>
+            {/* Pulsing icon */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-75" />
+              <WhatsappIcon 
+                size={22} 
+                className="relative z-10" 
+                round={true}
+                bgStyle={{ fill: "transparent" }}
+                iconFillColor="white"
+              />
+            </div>
 
-              {/* Text with hover effect */}
-              <span className="text-lg sm:text-xl font-semibold relative z-10 flex items-center gap-2 transform group-hover:scale-105 transition-transform duration-200">
-                Commander via WhatsApp
-                
-                {/* Arrow animation */}
-                <span className="inline-block transform group-hover:translate-x-1 transition-transform duration-200">
-                  →
-                </span>
+            {/* Text */}
+            <span className="text-sm font-semibold relative z-10 flex items-center gap-1.5">
+              Commander via WhatsApp
+              <span className="inline-block transform group-hover:translate-x-1 transition-transform duration-200">
+                →
               </span>
-
-              {/* Corner accent */}
-              <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 transform rotate-45 translate-x-1/2 -translate-y-1/2" />
-            </button>
-            <p className="text-center text-xs sm:text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
-              <Headphones 
-                size={16} 
-                className="text-[#23D366] bg-[#23D366]/10 p-1 rounded-none transition-colors duration-200 hover:bg-[#23D366] hover:text-white" 
-              />
-              Notre équipe est prête à vous aider
-              <MessageCircle 
-                size={16} 
-                className="text-[#23D366] bg-[#23D366]/10 p-1 rounded-none transition-colors duration-200 hover:bg-[#23D366] hover:text-white" 
-              />
-            </p>
-          </div>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -584,65 +689,59 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
             <div className="p-8">
           {/* Product Info */}
           <div className="space-y-4">
-            {/* Product Name and Labels group */}
+            {/* Product Name and Category */}
             <div className="pt-1">
-              <h1 
-                className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 bg-clip-text text-transparent uppercase leading-tight sm:leading-tight lg:leading-tight mb-3"
-                style={{ 
-                  wordBreak: 'break-word',
-                }}
-              >
-                {product.name}
-              </h1>
-
-              {/* Category, Dimensions & Reference - Smaller on mobile */}
-              <div className="flex flex-wrap gap-1.5">
-                <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
-                  <Tag size={12} />
-                  <span className="text-xs font-medium">{product.subCategory}</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-700 rounded-full">
-                  <Ruler size={12} />
-                  <span className="text-xs font-medium">{product.dimensions}</span>
+              <div className="flex items-center gap-2 mb-2">
+                <h1 
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 uppercase leading-tight sm:leading-tight lg:leading-tight"
+                  style={{ 
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {product.name}
+                </h1>
+                <div className="flex-shrink-0 px-1 bg-gradient-to-r from-emerald-400 to-green-500 shadow-sm">
+                  <span className="text-[9px] font-medium text-white uppercase tracking-wide leading-[12px] block">
+                    {product.mainCategory}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Price Section - Bigger price */}
-            <div className="bg-gray-50/80 rounded-xl p-4">
-              <div className="flex items-center justify-between gap-2">
-                {/* Price */}
-                <div className="flex items-baseline gap-2">
-                  <div className="relative">
-                    <div className="absolute -inset-1.5 sm:-inset-2 -left-0 bg-gradient-to-r from-yellow-400 to-amber-300 -skew-x-12 rounded-lg shadow-lg" />
-                    <span className="relative text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 px-2 sm:px-3 py-0.5 sm:py-1">
-                      {product.topDealsPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
-                    </span>
-                  </div>
-                  <span className="text-sm sm:text-base text-gray-400 line-through ml-2">
-                    {product.initialPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
+            {/* Price Section - Bigger with Enhanced Styling */}
+            <div className="flex items-center justify-between py-3">
+              <div className="flex items-baseline gap-2">
+                <span className="px-3 py-1.5 inline-block bg-[#FBCF38] -skew-x-12 text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1),4px_4px_12px_-2px_rgba(251,207,56,0.3)]">
+                  <span className="inline-block skew-x-12">
+                    {product.topDealsPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
                   </span>
-                </div>
+                </span>
+                <span className="text-sm sm:text-base text-gray-400 line-through">
+                  {product.initialPrice.toLocaleString('fr-FR').replace(',', ' ')} DH
+                </span>
+              </div>
 
-                {/* Discount and Offer badges */}
-                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg text-[10px] sm:text-xs font-bold whitespace-nowrap">
-                      -{discountPercentage}%
-                    </span>
-                  </motion.div>
-                  <motion.div 
-                    className="flex items-center px-1.5 sm:px-2 py-0.5 bg-orange-100 text-orange-700 rounded-lg"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                  >
-                    <Clock size={10} className="mr-0.5 sm:mr-1" />
-                    <span className="text-[10px] sm:text-xs font-medium whitespace-nowrap">Offre limitée</span>
-                  </motion.div>
-                </div>
+              <div className="flex items-center gap-2">
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="bg-red-500 px-2 py-1"
+                >
+                  <span className="text-sm font-bold text-white">
+                    -{discountPercentage}%
+                  </span>
+                </motion.div>
+                
+                <motion.div 
+                  className="flex items-center gap-1.5 bg-emerald-500 px-2 py-1"
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Clock className="w-3.5 h-3.5 text-white" />
+                  <span className="text-xs font-medium text-white whitespace-nowrap">
+                    Offre Limitée
+                  </span>
+                </motion.div>
               </div>
             </div>
 
@@ -883,4 +982,3 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
     </AnimatePresence>
   )
 }
-

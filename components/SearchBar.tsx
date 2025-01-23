@@ -153,7 +153,7 @@ export default function SearchBar({ onClose, className, onClick }: SearchBarProp
                 exit={{ opacity: 0, y: -20 }}
                 className="w-full max-w-3xl mx-4"
               >
-                <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+                <div className="bg-gradient-to-r from-emerald-900 via-green-800 to-emerald-900 rounded-2xl shadow-2xl overflow-hidden border border-white/10">
                   {/* Search Input */}
                   <div className="p-4">
                     <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3.5">

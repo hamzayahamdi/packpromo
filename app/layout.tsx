@@ -1,17 +1,20 @@
-import { Analytics } from '@vercel/analytics/react'
-import "./globals.css"
+import { Inter } from 'next/font/google'
+import './globals.css'
+import Header from '@/components/Header'
+import { Metadata } from 'next'
 
-export const metadata = {
-  title: "Sketch TOP DEALS",
-  description: "Les meilleures offres de meubles au Maroc",
-  icons: {
-    icon: [
-      {
-        url: "/topdeal.svg",
-        href: "/topdeal.svg",
-      },
-    ],
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://sketch-design.ma'),
+  title: {
+    default: 'Packs Promos',
+    template: '%s | Packs Promos'
   },
+  description: 'Découvrez nos packs exclusifs de meubles à prix réduits',
+  icons: {
+    icon: '/favicon.ico',
+  }
 }
 
 export default function RootLayout({
@@ -21,9 +24,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body>
-        {children}
-        <Analytics />
+      <head>
+        <title>Packs Promos</title>
+      </head>
+      <body className={inter.className}>
+        <Header />
+        <main>
+          {children}
+        </main>
       </body>
     </html>
   )

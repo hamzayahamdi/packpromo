@@ -43,10 +43,12 @@ export default function Header() {
 
   // Updated getActiveCategory function
   const getActiveCategory = useCallback((): Category | null => {
-    if (pathname?.startsWith('/products/')) return null;
+    // If it's a product page, don't highlight any category
+    if (pathname?.startsWith('/products/')) {
+      return null;
+    }
     
-    if (pathname === '/categories/tous' || pathname === '/') return 'TOUS';
-    
+    // For category pages
     const match = pathname.match(/\/categories\/([^/]+)/);
     if (match) {
       const categorySlug = decodeURIComponent(match[1]);
@@ -66,9 +68,15 @@ export default function Header() {
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
       
-      return slugToCategory[normalizedSlug] || 'TOUS';
+      return slugToCategory[normalizedSlug] || null;
     }
-    return 'TOUS';
+
+    // Default to TOUS for home page
+    if (pathname === '/') {
+      return 'TOUS';
+    }
+
+    return null;
   }, [pathname]);
 
   useEffect(() => {
@@ -128,7 +136,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed w-full top-0 z-50 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 shadow-lg">
+      <header className="fixed w-full top-0 z-50 bg-gradient-to-r from-emerald-900 via-green-800 to-emerald-900 shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex items-stretch justify-between relative h-[80px]">
             {/* Logo */}
@@ -139,7 +147,7 @@ export default function Header() {
             >
               <Image
                 src="/topdeal.svg"
-                alt="Top Deal"
+                alt="Packs Promos"
                 width={240}
                 height={100}
                 priority
@@ -283,15 +291,15 @@ export default function Header() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             
-            {/* Menu Content - Updated positioning */}
+            {/* Menu Content - Updated gradient */}
             <motion.nav
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="fixed left-0 right-0 top-[80px] bg-gradient-to-b from-gray-900/95 to-gray-800/95 z-50"
+              className="fixed left-0 right-0 top-[80px] bg-gradient-to-b from-emerald-900/95 to-green-800/95 z-50"
             >
-              <div className="absolute inset-0 backdrop-blur-sm bg-black/20" />
+              <div className="absolute inset-0 backdrop-blur-sm bg-black/10" />
               
               <div className="container mx-auto p-3 relative">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

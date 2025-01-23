@@ -9,7 +9,7 @@ export default function PageLayout({ children }: PageLayoutProps) {
   return (
     <main className="min-h-screen flex flex-col">
       {/* Background gradient that matches header */}
-      <div className="fixed inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-white pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-emerald-900 via-green-800 to-white pointer-events-none" />
       
       {/* Sketch logo - sticky but behind content */}
       <div className="fixed top-[80px] w-full flex justify-center pointer-events-none" style={{ zIndex: 0 }}>

@@ -3,6 +3,16 @@ import prisma from '@/lib/prisma'
 import ProductGrid from '@/components/ProductGrid'
 import PageLayout from '@/components/PageLayout'
 import { Product } from '@prisma/client'
+import { CATEGORY_DISPLAY_NAMES, MainCategory } from '@/lib/categories'
+
+// Helper function to get display name
+function getCategoryDisplayName(category: string): string {
+  const normalizedCategory = category
+    .toUpperCase()
+    .replace(/-/g, ' ') as MainCategory;
+  
+  return CATEGORY_DISPLAY_NAMES[normalizedCategory] || category;
+}
 
 async function getProducts(category: string) {
   try {
@@ -69,12 +79,12 @@ export default async function CategoryPage({
 }) {
   const products = await getProducts(params.category)
 
-  // If no products found, you might want to show a message instead of notFound()
+  // If no products found, show message without category name
   if (!products.length) {
     return (
       <PageLayout>
         <div className="text-center py-10">
-          <h2 className="text-2xl font-semibold text-gray-700">
+          <h2 className="text-xl font-semibold text-gray-700">
             Aucun produit trouvé dans cette catégorie
           </h2>
         </div>
@@ -87,4 +97,13 @@ export default async function CategoryPage({
       <ProductGrid products={products} />
     </PageLayout>
   )
+}
+
+// Dynamic metadata for tab title
+export async function generateMetadata({ params }: { params: { category: string } }) {
+  const categoryDisplayName = getCategoryDisplayName(params.category)
+  
+  return {
+    title: categoryDisplayName
+  }
 } 
