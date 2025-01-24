@@ -109,23 +109,21 @@ export default function ProductCard({ product, className, onQuickView }: Product
   const packItems = useMemo(() => {
     const parts = product.dimensions.split('+').map(part => part.trim());
     
-    if (parts.length === 1) {
-      return [{
-        name: parts[0],
-        qty: 1
-      }];
-    }
-
-    return [
-      {
-        name: parts[0],
-        qty: 1
-      },
-      {
-        name: parts[1].split('x')[0],
-        qty: parseInt(parts[1].split('x')[1] || '1')
+    return parts.map(part => {
+      // Check if the part contains a quantity (e.g., "2x Fauteuils")
+      const qtyMatch = part.match(/(\d+)x\s*(.+)/);
+      if (qtyMatch) {
+        return {
+          name: qtyMatch[2].trim(),
+          qty: parseInt(qtyMatch[1])
+        };
       }
-    ];
+      // If no quantity specified, assume quantity of 1
+      return {
+        name: part,
+        qty: 1
+      };
+    });
   }, [product.dimensions]);
 
   const isPackProduct = packItems.length > 1;

@@ -29,6 +29,11 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState<Category | null>('TOUS')
 
+  // Hide header if we're in the admin panel
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   // Updated getActiveCategory function
   const getActiveCategory = useCallback((): Category | null => {
     if (!pathname || pathname.startsWith('/products/')) {
