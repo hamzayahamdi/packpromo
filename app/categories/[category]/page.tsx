@@ -91,7 +91,6 @@ export default async function CategoryPage({
       <ProductGrid 
         products={products} 
         category={dbCategory}
-        initialCategory={params.category}
       />
     </PageLayout>
   )
