@@ -7,30 +7,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, Search, ChevronDown, Sofa, Bed, Table2 as Table, Armchair as Chair, Palmtree, Home, LayoutGrid } from 'lucide-react'
 import { useRouter, usePathname } from 'next/navigation'
 import SearchModal from './SearchModal'
+import { MainCategory, PREDEFINED_CATEGORIES, CATEGORY_DISPLAY_NAMES, CATEGORY_TO_SLUG, SLUG_TO_CATEGORY } from '@/lib/categories'
 
-// Update category type to match database format
-type Category = 'TOUS' | 'SALLE À MANGER' | 'SÉJOUR' | 'CHAMBRE À COUCHER' | 'ENSEMBLES DE JARDIN'
+// Replace the existing Category type and categories array with:
+type Category = MainCategory;
+const categories: Category[] = Object.keys(PREDEFINED_CATEGORIES) as Category[];
 
-// Update categories array to match database format
-const categories: Category[] = [
-  'TOUS', 'SALLE À MANGER', 'SÉJOUR', 'CHAMBRE À COUCHER', 'ENSEMBLES DE JARDIN'
-]
-
-// Update the display names mapping
-const categoryDisplayNames: { [key in Category]: string } = {
-  'TOUS': 'Tous',
-  'SALLE À MANGER': 'Salle à Manger',
-  'SÉJOUR': 'Séjour',
-  'CHAMBRE À COUCHER': 'Chambre à coucher',
-  'ENSEMBLES DE JARDIN': 'Ensembles de Jardin'
-}
-
-// Update category icons to use uppercase keys
+// Update category icons to use uppercase keys without accents
 const categoryIcons: { [key in Category]: JSX.Element } = {
   'TOUS': <LayoutGrid size={18} />,
-  'SALLE À MANGER': <Table size={18} />,
-  'SÉJOUR': <Sofa size={18} />,
-  'CHAMBRE À COUCHER': <Bed size={18} />,
+  'SALLE A MANGER': <Table size={18} />,
+  'SEJOUR': <Sofa size={18} />,
+  'CHAMBRE A COUCHER': <Bed size={18} />,
   'ENSEMBLES DE JARDIN': <Palmtree size={18} />
 }
 
@@ -43,35 +31,16 @@ export default function Header() {
 
   // Updated getActiveCategory function
   const getActiveCategory = useCallback((): Category | null => {
-    // If pathname is null or it's a product page, don't highlight any category
     if (!pathname || pathname.startsWith('/products/')) {
       return null;
     }
     
-    // For category pages
     const match = pathname.match(/\/categories\/([^/]+)/);
     if (match) {
       const categorySlug = decodeURIComponent(match[1]);
-      
-      // Create a mapping of slugs to categories
-      const slugToCategory: { [key: string]: Category } = {
-        'tous': 'TOUS',
-        'salle-a-manger': 'SALLE À MANGER',
-        'sejour': 'SÉJOUR',
-        'chambre-a-coucher': 'CHAMBRE À COUCHER',
-        'ensembles-de-jardin': 'ENSEMBLES DE JARDIN'
-      };
-      
-      // Remove accents from the slug for comparison
-      const normalizedSlug = categorySlug
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-      
-      return slugToCategory[normalizedSlug] || null;
+      return SLUG_TO_CATEGORY[categorySlug] || null;
     }
 
-    // Default to TOUS for home page
     if (pathname === '/') {
       return 'TOUS';
     }
@@ -90,22 +59,13 @@ export default function Header() {
     setActiveCategory(category);
     setIsMobileMenuOpen(false);
 
-    // Create a mapping of categories to slugs
-    const categoryToSlug: { [key in Category]: string } = {
-      'TOUS': 'tous',
-      'SALLE À MANGER': 'salle-a-manger',
-      'SÉJOUR': 'sejour',
-      'CHAMBRE À COUCHER': 'chambre-a-coucher',
-      'ENSEMBLES DE JARDIN': 'ensembles-de-jardin'
-    };
-
-    const slug = categoryToSlug[category];
+    const slug = CATEGORY_TO_SLUG[category];
     router.push(`/categories/${slug}`, { scroll: false });
   };
 
   // Update the category display in the UI
   const getCategoryDisplayName = (category: Category) => {
-    return categoryDisplayNames[category]
+    return CATEGORY_DISPLAY_NAMES[category];
   }
 
   // Logo click handler - now goes to "Tous" category

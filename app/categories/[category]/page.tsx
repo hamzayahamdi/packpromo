@@ -3,7 +3,12 @@ import prisma from '@/lib/prisma'
 import ProductGrid from '@/components/ProductGrid'
 import PageLayout from '@/components/PageLayout'
 import { Product } from '@prisma/client'
-import { CATEGORY_DISPLAY_NAMES, MainCategory } from '@/lib/categories'
+import { 
+  CATEGORY_DISPLAY_NAMES, 
+  MainCategory, 
+  SLUG_TO_CATEGORY,
+  DISPLAY_TO_DB_CATEGORY 
+} from '@/lib/categories'
 
 // Helper function to get display name
 function getCategoryDisplayName(category: string): string {
@@ -16,59 +21,46 @@ function getCategoryDisplayName(category: string): string {
 
 async function getProducts(category: string) {
   try {
-    const decodedCategory = decodeURIComponent(category)
-      .toUpperCase()
-      .replace(/-/g, ' ')
+    // First, convert the URL slug to the proper category format
+    const decodedCategory = decodeURIComponent(category);
+    const mainCategory = SLUG_TO_CATEGORY[decodedCategory];
+    
+    console.log('URL category:', decodedCategory);
+    console.log('Mapped to category:', mainCategory);
 
-    console.log('Processing category:', decodedCategory)
-
-    // For 'TOUS' category or empty category (homepage)
-    if (decodedCategory === 'TOUS' || decodedCategory === '' || !decodedCategory) {
+    // For 'TOUS' category or invalid category
+    if (!mainCategory || mainCategory === 'TOUS') {
       const products = await prisma.product.findMany({
         where: { isActive: true },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      })
-      return products
+        orderBy: { createdAt: 'desc' }
+      });
+      return products;
     }
 
-    // Map URL slugs to actual category names
-    const categoryMap: { [key: string]: string } = {
-      'SALLE A MANGER': 'SALLE A MANGER',
-      'SEJOUR': 'SEJOUR',
-      'CHAMBRE A COUCHER': 'CHAMBRE A COUCHER',
-      'ENSEMBLES DE JARDIN': 'ENSEMBLES DE JARDIN'
-    }
-
-    const actualCategory = categoryMap[decodedCategory]
-    console.log('Mapped to actual category:', actualCategory)
-
-    if (!actualCategory) {
-      console.log('Invalid category:', decodedCategory)
-      return []
-    }
+    // Get the database category format
+    const dbCategory = DISPLAY_TO_DB_CATEGORY[mainCategory];
+    console.log('Database category:', dbCategory);
 
     // For specific categories
     const products = await prisma.product.findMany({
       where: {
         isActive: true,
         OR: [
-          { mainCategory: actualCategory },
-          { subCategory: actualCategory }
+          { mainCategory: dbCategory },
+          { subCategory: dbCategory }
         ]
       },
       orderBy: {
         createdAt: 'desc'
       }
-    }) || []
+    });
 
-    console.log(`Found ${products.length} products for category:`, actualCategory)
-    return products
+    console.log(`Found ${products.length} products for category:`, dbCategory);
+    return products;
   } catch (error: any) {
-    console.error('Error fetching products:', error)
-    console.error('Error details:', error?.message || 'Unknown error')
-    return []
+    console.error('Error fetching products:', error);
+    console.error('Error details:', error?.message || 'Unknown error');
+    return [];
   }
 }
 
@@ -78,6 +70,8 @@ export default async function CategoryPage({
   params: { category: string }
 }) {
   const products = await getProducts(params.category)
+  const currentCategory = SLUG_TO_CATEGORY[params.category]
+  const dbCategory = currentCategory ? DISPLAY_TO_DB_CATEGORY[currentCategory] : null
 
   // If no products found, show message without category name
   if (!products.length) {
@@ -94,7 +88,11 @@ export default async function CategoryPage({
 
   return (
     <PageLayout>
-      <ProductGrid products={products} />
+      <ProductGrid 
+        products={products} 
+        category={dbCategory}
+        initialCategory={params.category}
+      />
     </PageLayout>
   )
 }
