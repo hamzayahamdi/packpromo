@@ -71,7 +71,7 @@ export default async function CategoryPage({
 }) {
   const products = await getProducts(params.category)
   const currentCategory = SLUG_TO_CATEGORY[params.category]
-  const dbCategory = currentCategory ? DISPLAY_TO_DB_CATEGORY[currentCategory] : null
+  const dbCategory = currentCategory ? DISPLAY_TO_DB_CATEGORY[currentCategory] : undefined
 
   // If no products found, show message without category name
   if (!products.length) {
